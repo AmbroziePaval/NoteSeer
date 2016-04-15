@@ -23,15 +23,12 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    inputImage = BitmapFactory.decodeResource(getResources(), R.drawable.test_full2_1);
-    Bitmap inputImageCopy1 = BitmapFactory.decodeResource(getResources(), R.drawable.test_full2_1);
-    Bitmap inputImageCopy2 = BitmapFactory.decodeResource(getResources(), R.drawable.test_full2_1);
+    int inputPictureFile = R.drawable.test1;
+    inputImage = BitmapFactory.decodeResource(getResources(), inputPictureFile);
+    Bitmap inputImageCopy1 = BitmapFactory.decodeResource(getResources(), inputPictureFile);
+    Bitmap inputImageCopy2 = BitmapFactory.decodeResource(getResources(), inputPictureFile);
     setContentView(R.layout.activity_main);
     imageView = (ImageView) this.findViewById(R.id.imageView);
-//    inputImage = OpencvStavesUtil.getStavesFromBitmap(inputImage);
-//    inputImage = OpencvStavesUtil.removeStavesFromBitmap(inputImage);
-//    inputImage = OpencvStavesUtil.findNotationContours(inputImage);
-//    inputImage = OpencvStavesUtil.getStaveLineContours(inputImage);
     inputImage = OpencvStavesUtil.drawElementsContourWithTheStave(inputImageCopy1, inputImageCopy2, inputImage);
     imageView.setImageBitmap(inputImage);
   }

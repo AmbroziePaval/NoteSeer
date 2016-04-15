@@ -86,7 +86,6 @@ public class OpencvStavesUtil {
   public static Bitmap findNotationContours(Bitmap inputImage) {
     Mat resultImageMat = new Mat();
     Utils.bitmapToMat(inputImage, resultImageMat);
-
     Scalar contourScalar = new Scalar(255, 0, 0);
 
     List<Rect> allContourRectangles = getImageElementContourRectangles(inputImage);
@@ -176,25 +175,6 @@ public class OpencvStavesUtil {
     else return rect1.contains(new Point(rect2.x + rect2.width, rect2.y + rect2.height));
   }
 
-  public static Bitmap getStaveLineContours(Bitmap inputImage) {
-    Mat resultImageMat = new Mat();
-    Utils.bitmapToMat(inputImage, resultImageMat);
-    Scalar contourScalar = new Scalar(255, 0, 0);
-
-    List<Rect> allContourRectangles = getStavesContainingRectangles(inputImage);
-
-    for (Rect rect : allContourRectangles) {
-      Imgproc.rectangle(resultImageMat,
-              new Point(rect.x, rect.y),
-              new Point(rect.x + rect.width, rect.y + rect.height),
-              contourScalar, 3);
-      Log.i("contour", "contour" + " x:" + rect.x + " y:" + rect.y);
-    }
-
-    Utils.matToBitmap(resultImageMat, inputImage);
-    return inputImage;
-  }
-
   /**
    * Function calculates the rectangles containing each stave from the picture
    *
@@ -254,6 +234,8 @@ public class OpencvStavesUtil {
 
   /**
    * Function calculates the rectangles containing each element with the it's part of the stave
+   * Adding 4 to width and height, and reducing 2 from x and y, is to have a wider rectangle for
+   *    better accuracy
    *
    * @param inputImage1 the image with the staves and elements
    * @param inputImage2 the image with the staves and elements
@@ -273,10 +255,7 @@ public class OpencvStavesUtil {
       for (Rect staveRectangle : imageStaveContourRectangles) {
         if (rectanglesIntersect(elementRectangle, staveRectangle)) {
           contained = true;
-          elementRectangle.height =
-                  Math.max(elementRectangle.y + elementRectangle.height, staveRectangle.y + staveRectangle.height)
-                          - Math.min(elementRectangle.y, staveRectangle.y) + 4;
-          elementRectangle.y = Math.min(elementRectangle.y, staveRectangle.y) - 2;
+          elementRectangle = getElementWithStaveContainingRect(elementRectangle, staveRectangle);
         } else {
           int distance;
           if (elementRectangle.y > staveRectangle.y + staveRectangle.height) {
@@ -291,14 +270,19 @@ public class OpencvStavesUtil {
         }
       }
       if (!contained && closestStave != null) {
-        elementRectangle.height =
-                Math.max(elementRectangle.y + elementRectangle.height, closestStave.y + closestStave.height)
-                        - Math.min(elementRectangle.y, closestStave.y) + 4;
-        elementRectangle.y = Math.min(elementRectangle.y, closestStave.y) - 2;
+        elementRectangle = getElementWithStaveContainingRect(elementRectangle, closestStave);
       }
       elementRectangle.x = elementRectangle.x - 2;
       elementRectangle.width = elementRectangle.width + 4;
     }
     return imageElementContourRectangles;
+  }
+
+  private static Rect getElementWithStaveContainingRect(Rect elementRectangle, Rect staveRectangle) {
+    elementRectangle.height =
+            Math.max(elementRectangle.y + elementRectangle.height, staveRectangle.y + staveRectangle.height)
+                    - Math.min(elementRectangle.y, staveRectangle.y) + 4;
+    elementRectangle.y = Math.min(elementRectangle.y, staveRectangle.y) - 2;
+    return elementRectangle;
   }
 }
