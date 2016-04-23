@@ -11,8 +11,11 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.ml.KNearest;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -224,7 +227,7 @@ public class OpencvStavesUtil {
               new Point(rect.x, rect.y),
               new Point(rect.x + rect.width, rect.y + rect.height),
               contourScalar, 3);
-      Log.i("contour", "contour" + " x:" + rect.x + " y:" + rect.y);
+      Log.i("contour", "contour" + " x:" + rect.x + " width:" + rect.width + " y:" + rect.y + " height:" + rect.height);
     }
 
     Utils.matToBitmap(resultImageMat, inputImage3);
@@ -235,7 +238,7 @@ public class OpencvStavesUtil {
   /**
    * Function calculates the rectangles containing each element with the it's part of the stave
    * Adding 4 to width and height, and reducing 2 from x and y, is to have a wider rectangle for
-   *    better accuracy
+   * better accuracy
    *
    * @param inputImage1 the image with the staves and elements
    * @param inputImage2 the image with the staves and elements
@@ -272,17 +275,58 @@ public class OpencvStavesUtil {
       if (!contained && closestStave != null) {
         elementRectangle = getElementWithStaveContainingRect(elementRectangle, closestStave);
       }
-      elementRectangle.x = elementRectangle.x - 2;
-      elementRectangle.width = elementRectangle.width + 4;
+      elementRectangle.width = elementRectangle.width + 8;
+      elementRectangle.x = elementRectangle.x - 4;
     }
-    return imageElementContourRectangles;
+    return sortElementsRectangles(generifyTheRectangleContours(imageElementContourRectangles));
   }
 
   private static Rect getElementWithStaveContainingRect(Rect elementRectangle, Rect staveRectangle) {
     elementRectangle.height =
             Math.max(elementRectangle.y + elementRectangle.height, staveRectangle.y + staveRectangle.height)
-                    - Math.min(elementRectangle.y, staveRectangle.y) + 4;
-    elementRectangle.y = Math.min(elementRectangle.y, staveRectangle.y) - 2;
+                    - Math.min(elementRectangle.y, staveRectangle.y) + 8;
+    elementRectangle.y = Math.min(elementRectangle.y, staveRectangle.y) - 4;
     return elementRectangle;
+  }
+
+  public static Bitmap drawRectOnImage(Bitmap inputImage, Rect rectangle) {
+    Mat resultImageMat = new Mat();
+    Utils.bitmapToMat(inputImage, resultImageMat);
+    Scalar contourScalar = new Scalar(255, 0, 0);
+
+    Imgproc.rectangle(resultImageMat,
+            new Point(rectangle.x, rectangle.y),
+            new Point(rectangle.x + rectangle.width, rectangle.y + rectangle.height),
+            contourScalar, 3);
+
+    Utils.matToBitmap(resultImageMat, inputImage);
+
+    return inputImage;
+  }
+
+  /**
+   * ]
+   * Function that sorts the list of given rectangles from the top left to the right downwards
+   *
+   * @param rects the given rectangles
+   * @return the sorted list of Rect objects
+   */
+  private static List<Rect> sortElementsRectangles(List<Rect> rects) {
+    Collections.sort(rects, new Comparator<Rect>() {
+      @Override
+      public int compare(Rect rectFirst, Rect rectSecond) {
+        Integer first, second;
+        if(Math.abs(rectFirst.y-rectSecond.y) < 200){
+          first = rectFirst.x;
+          second = rectSecond.x;
+          return first.compareTo(second);
+        }  else {
+          first = rectFirst.y;
+          second = rectSecond.y;
+        }
+        return first.compareTo(second);
+      }
+    });
+    return rects;
   }
 }

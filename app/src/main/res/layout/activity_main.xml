@@ -10,12 +10,65 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.ambrozie.learnandroidopencv.MainActivity">
 
-    <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/imageView"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true"/>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:layout_width="510dp"
+            android:layout_height="250dp"
+            android:id="@+id/imageView"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginBottom="74dp"
+            android:layout_alignParentTop="true"
+            android:layout_row="0"
+            android:layout_column="0"/>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="left|top">
+
+            <EditText
+                android:layout_width="122dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/pitchStepText"
+                android:layout_gravity="left|bottom"
+                android:editable="true"
+                android:autoText="false"
+                android:text="Step"/>
+
+            <EditText
+                android:layout_width="119dp"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:ems="10"
+                android:id="@+id/pitchOctaveNumber"
+                android:layout_gravity="bottom|center_horizontal"
+                android:text="Octave"/>
+
+            <EditText
+                android:layout_width="121dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/noteTypeText"
+                android:layout_gravity="right|bottom"
+                android:text="Type"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Wrong capture"
+                android:id="@+id/notOkRecognizedButton"
+                android:layout_gravity="right|top"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Next capture"
+                android:id="@+id/nextRectangleButton"
+                android:layout_gravity="right|center_vertical"/>
+        </FrameLayout>
+    </FrameLayout>
+
 </RelativeLayout>
