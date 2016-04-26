@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<root>
+    <mat>
+        <pixel>
+            <r>100</r>
+            <g>200</g>
+            <b>150</b>
+            <x>255</x>
+        </pixel>
+        <pixel>
+            <r>140</r>
+            <g>210</g>
+            <b>250</b>
+            <x>255</x>
+        </pixel>
+    </mat>
+
+    <mat>
+        <pixel>
+            <r>100</r>
+            <g>200</g>
+            <b>150</b>
+            <x>255</x>
+        </pixel>
+        <pixel>
+            <r>140</r>
+            <g>210</g>
+            <b>250</b>
+            <x>255</x>
+        </pixel>
+        <pixel>
+            <r>110</r>
+            <g>110</g>
+            <b>110</b>
+            <x>155</x>
+        </pixel>
+    </mat>
+</root>

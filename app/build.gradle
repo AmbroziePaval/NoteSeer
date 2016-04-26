@@ -24,4 +24,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.2.1'
     compile project(':libraries:opencv')
+    compile 'org.immutables:gson:2.1.16'
+    compile files('libs/jaxb-api-2.2.jar')
+    compile files('libs/simple-xml-2.7.1.jar')
 }

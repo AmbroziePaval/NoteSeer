@@ -1,9 +1,15 @@
 package com.example.ambrozie.learnandroidopencv.opencv_mn_utils;
 
 import android.graphics.Bitmap;
+import android.util.Base64;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.opencv.android.Utils;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -23,6 +29,8 @@ import java.util.List;
  * Created by Ambrozie on 4/6/2016.
  */
 public class OpencvStavesUtil {
+
+  private static final String TAG = OpencvStavesUtil.class.getName();
 
   /**
    * The function gets a Bitmap image of a stave with elements, from which it removes the elements
@@ -305,7 +313,6 @@ public class OpencvStavesUtil {
   }
 
   /**
-   * ]
    * Function that sorts the list of given rectangles from the top left to the right downwards
    *
    * @param rects the given rectangles
@@ -316,11 +323,11 @@ public class OpencvStavesUtil {
       @Override
       public int compare(Rect rectFirst, Rect rectSecond) {
         Integer first, second;
-        if(Math.abs(rectFirst.y-rectSecond.y) < 200){
+        if (Math.abs(rectFirst.y - rectSecond.y) < 200) {
           first = rectFirst.x;
           second = rectSecond.x;
           return first.compareTo(second);
-        }  else {
+        } else {
           first = rectFirst.y;
           second = rectSecond.y;
         }
@@ -328,5 +335,64 @@ public class OpencvStavesUtil {
       }
     });
     return rects;
+  }
+
+  /**
+   * Functions that crops the rectangle from the input image and returns the matrix of data corresponding to it
+   *
+   * @param source    the input image
+   * @param rectangle the rectangle
+   * @return the Mat corresponding with the rectangle data
+   */
+  public static Mat getElementSampleDataFromRectangle(Mat source, Rect rectangle) {
+    Mat ROI = source.adjustROI(rectangle.y, rectangle.y + rectangle.height, rectangle.x, rectangle.x + rectangle.width);
+    Mat tmp1 = new Mat(), tmp2 = new Mat();
+    Imgproc.resize(ROI, tmp1, new Size(20, 20), 0, 0, Imgproc.INTER_LINEAR);
+//    tmp1.convertTo(tmp2, Imgproc.COLOR_BGR2GRAY);
+//    tmp1.convertTo(tmp2, CvType.CV_32FC1);
+    return tmp1;
+  }
+
+  public static String matToJson(Mat mat) {
+    JSONObject obj = new JSONObject();
+    try {
+      if (mat.isContinuous()) {
+        int cols = mat.cols();
+        int rows = mat.rows();
+        int elemSize = (int) mat.elemSize();
+
+        byte[] data = new byte[cols * rows * elemSize];
+
+//        Mat m = new Mat(rows, cols, CvType.CV_8S);
+//        Imgproc.filter2D(mat, mat, CvType.CV_8S, m);
+        mat.get(0, 0, data);
+
+        double[][] dataFloat = new double[rows][cols];
+        for (int i = 0; i < rows; i++) {
+          for (int j = 0; j < cols; j++) {
+            double[] matdata = mat.get(i, j);
+          }
+        }
+
+        obj.put("rows", mat.rows());
+        obj.put("cols", mat.cols());
+        obj.put("type", mat.type());
+
+        // We cannot set binary data to a json object, so:
+        // Encoding data byte array to Base64.
+        String dataString = new String(Base64.encode(data, Base64.DEFAULT));
+
+        obj.put("data", dataString);
+
+        Gson gson = new Gson();
+
+        return gson.toJson(obj);
+      } else {
+        Log.e(TAG, "Mat not continuous.");
+      }
+    } catch (JSONException e) {
+      e.printStackTrace();
+    }
+    return "{}";
   }
 }

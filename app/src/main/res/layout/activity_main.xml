@@ -37,7 +37,7 @@
                 android:layout_gravity="left|bottom"
                 android:editable="true"
                 android:autoText="false"
-                android:text="Step"/>
+                />
 
             <EditText
                 android:layout_width="119dp"
@@ -46,14 +46,14 @@
                 android:ems="10"
                 android:id="@+id/pitchOctaveNumber"
                 android:layout_gravity="bottom|center_horizontal"
-                android:text="Octave"/>
+                />
 
             <EditText
                 android:layout_width="121dp"
                 android:layout_height="wrap_content"
                 android:id="@+id/noteTypeText"
                 android:layout_gravity="right|bottom"
-                android:text="Type"/>
+                />
 
             <Button
                 android:layout_width="wrap_content"
