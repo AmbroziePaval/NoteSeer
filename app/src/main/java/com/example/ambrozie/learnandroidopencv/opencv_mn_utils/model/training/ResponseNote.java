@@ -1,26 +1,23 @@
-package com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model;
+package com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import org.simpleframework.xml.Element;
+import org.simpleframework.xml.Root;
 
 /**
  *
  * Created by Ambrozie on 4/23/2016.
  */
 
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
-public class NoteTrainingData {
-  @XmlElement(name="step")
+@Root(name="note")
+public class ResponseNote {
+  @Element(name="step")
   private String step;
-  @XmlElement(name="octave")
+  @Element(name="octave")
   private Integer octave;
-  @XmlElement(name="type")
+  @Element(name="type")
   private String type;
 
-  public NoteTrainingData(String step, Integer octave, String type) {
+  public ResponseNote(String step, Integer octave, String type) {
     this.step = step;
     this.octave = octave;
     this.type = type;
