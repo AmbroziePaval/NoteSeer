@@ -3,6 +3,7 @@ package com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training;
 import org.simpleframework.xml.ElementList;
 import org.simpleframework.xml.Root;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -17,6 +18,10 @@ public class SampleData {
 
   public SampleData(SampleData sampleData) {
     this.sampleMatList = sampleData.getSampleMatList();
+  }
+
+  public SampleData() {
+    sampleMatList = new ArrayList<>();
   }
 
   public List<SampleMat> getSampleMatList() {

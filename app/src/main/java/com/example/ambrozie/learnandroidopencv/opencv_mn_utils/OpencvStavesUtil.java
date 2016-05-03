@@ -4,6 +4,10 @@ import android.graphics.Bitmap;
 import android.util.Base64;
 import android.util.Log;
 
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.ResponseData;
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.SampleData;
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.SampleMat;
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.SamplePixel;
 import com.google.gson.Gson;
 
 import org.json.JSONException;
@@ -347,52 +351,56 @@ public class OpencvStavesUtil {
   public static Mat getElementSampleDataFromRectangle(Mat source, Rect rectangle) {
     Mat ROI = source.adjustROI(rectangle.y, rectangle.y + rectangle.height, rectangle.x, rectangle.x + rectangle.width);
     Mat tmp1 = new Mat(), tmp2 = new Mat();
-    Imgproc.resize(ROI, tmp1, new Size(20, 20), 0, 0, Imgproc.INTER_LINEAR);
+    Imgproc.resize(ROI, tmp1, new Size(10, 20), 0, 0, Imgproc.INTER_LINEAR);
 //    tmp1.convertTo(tmp2, Imgproc.COLOR_BGR2GRAY);
 //    tmp1.convertTo(tmp2, CvType.CV_32FC1);
     return tmp1;
   }
 
-  public static String matToJson(Mat mat) {
-    JSONObject obj = new JSONObject();
-    try {
-      if (mat.isContinuous()) {
-        int cols = mat.cols();
-        int rows = mat.rows();
-        int elemSize = (int) mat.elemSize();
+  public static SampleMat matToSampleMat(Mat mat) {
+    SampleMat sampleMat = new SampleMat();
+    if (mat.isContinuous()) {
+      int cols = mat.cols();
+      int rows = mat.rows();
 
-        byte[] data = new byte[cols * rows * elemSize];
-
-//        Mat m = new Mat(rows, cols, CvType.CV_8S);
-//        Imgproc.filter2D(mat, mat, CvType.CV_8S, m);
-        mat.get(0, 0, data);
-
-        double[][] dataFloat = new double[rows][cols];
-        for (int i = 0; i < rows; i++) {
-          for (int j = 0; j < cols; j++) {
-            double[] matdata = mat.get(i, j);
-          }
+      for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+          SamplePixel samplePixel = new SamplePixel();
+          samplePixel.setRow(i);
+          samplePixel.setCol(j);
+          double[] matPixelData = mat.get(i, j);
+          samplePixel.setR((int) matPixelData[0]);
+          samplePixel.setG((int) matPixelData[1]);
+          samplePixel.setB((int) matPixelData[2]);
+          samplePixel.setX((int) matPixelData[3]);
+          sampleMat.getSamplePixelList().add(samplePixel);
         }
-
-        obj.put("rows", mat.rows());
-        obj.put("cols", mat.cols());
-        obj.put("type", mat.type());
-
-        // We cannot set binary data to a json object, so:
-        // Encoding data byte array to Base64.
-        String dataString = new String(Base64.encode(data, Base64.DEFAULT));
-
-        obj.put("data", dataString);
-
-        Gson gson = new Gson();
-
-        return gson.toJson(obj);
-      } else {
-        Log.e(TAG, "Mat not continuous.");
       }
-    } catch (JSONException e) {
-      e.printStackTrace();
+      return sampleMat;
+    } else {
+      Log.e(TAG, "Mat not continuous.");
     }
-    return "{}";
+    return null;
+  }
+
+  public static Mat sampleMatToMat(SampleMat sampleMat) {
+    Mat mat = new Mat();
+    for (SamplePixel samplePixel : sampleMat.getSamplePixelList()) {
+      double[] matPixelData = new double[4];
+      matPixelData[0] = samplePixel.getR();
+      matPixelData[1] = samplePixel.getG();
+      matPixelData[2] = samplePixel.getB();
+      matPixelData[3] = samplePixel.getX();
+      mat.put(samplePixel.getRow(), samplePixel.getCol(), matPixelData);
+    }
+    return mat;
+  }
+
+  public static KNearest trainWithData(KNearest kNearest, SampleData sampleData, ResponseData responseData) {
+    for (int i = 1; i <= sampleData.getSampleMatList().size(); i++) {
+      Mat sample = sampleMatToMat(sampleData.getSampleMatList().get(i));
+//      kNearest.train();
+    }
+    return kNearest;
   }
 }

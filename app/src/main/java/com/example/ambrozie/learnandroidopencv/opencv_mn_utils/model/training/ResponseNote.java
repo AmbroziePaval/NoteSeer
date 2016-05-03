@@ -17,6 +17,9 @@ public class ResponseNote {
   @Element(name="type")
   private String type;
 
+  public ResponseNote() {
+  }
+
   public ResponseNote(String step, Integer octave, String type) {
     this.step = step;
     this.octave = octave;
