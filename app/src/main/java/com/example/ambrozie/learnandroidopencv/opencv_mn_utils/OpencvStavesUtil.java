@@ -4,11 +4,13 @@ import android.graphics.Bitmap;
 import android.util.Base64;
 import android.util.Log;
 
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.knearest.KnearestNote;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.ResponseData;
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.ResponseMat;
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.ResponseNote;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.SampleData;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.SampleMat;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.SamplePixel;
-import com.google.gson.Gson;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,11 +24,13 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.ml.KNearest;
+import org.opencv.ml.StatModel;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A class that works on pictures related to musical notation
@@ -349,12 +353,12 @@ public class OpencvStavesUtil {
    * @return the Mat corresponding with the rectangle data
    */
   public static Mat getElementSampleDataFromRectangle(Mat source, Rect rectangle) {
-    Mat ROI = source.adjustROI(rectangle.y, rectangle.y + rectangle.height, rectangle.x, rectangle.x + rectangle.width);
-    Mat tmp1 = new Mat(), tmp2 = new Mat();
-    Imgproc.resize(ROI, tmp1, new Size(10, 20), 0, 0, Imgproc.INTER_LINEAR);
+    Mat ROI = source.submat(rectangle.y, rectangle.y + rectangle.height, rectangle.x, rectangle.x + rectangle.width);
+//    Mat tmp1 = new Mat(), tmp2 = new Mat();
+    Imgproc.resize(ROI, ROI, new Size(30, 80), 0, 0, Imgproc.INTER_LINEAR);
 //    tmp1.convertTo(tmp2, Imgproc.COLOR_BGR2GRAY);
 //    tmp1.convertTo(tmp2, CvType.CV_32FC1);
-    return tmp1;
+    return ROI;
   }
 
   public static SampleMat matToSampleMat(Mat mat) {
@@ -369,10 +373,7 @@ public class OpencvStavesUtil {
           samplePixel.setRow(i);
           samplePixel.setCol(j);
           double[] matPixelData = mat.get(i, j);
-          samplePixel.setR((int) matPixelData[0]);
-          samplePixel.setG((int) matPixelData[1]);
-          samplePixel.setB((int) matPixelData[2]);
-          samplePixel.setX((int) matPixelData[3]);
+          samplePixel.setV((int) matPixelData[0]);
           sampleMat.getSamplePixelList().add(samplePixel);
         }
       }
@@ -387,19 +388,25 @@ public class OpencvStavesUtil {
     Mat mat = new Mat();
     for (SamplePixel samplePixel : sampleMat.getSamplePixelList()) {
       double[] matPixelData = new double[4];
-      matPixelData[0] = samplePixel.getR();
-      matPixelData[1] = samplePixel.getG();
-      matPixelData[2] = samplePixel.getB();
-      matPixelData[3] = samplePixel.getX();
+      matPixelData[0] = samplePixel.getV();
       mat.put(samplePixel.getRow(), samplePixel.getCol(), matPixelData);
     }
     return mat;
   }
 
-  public static KNearest trainWithData(KNearest kNearest, SampleData sampleData, ResponseData responseData) {
-    for (int i = 1; i <= sampleData.getSampleMatList().size(); i++) {
-      Mat sample = sampleMatToMat(sampleData.getSampleMatList().get(i));
-//      kNearest.train();
+  public static KnearestNote trainWithData(KnearestNote kNearest, SampleData sampleData, ResponseData responseData) {
+    for (int i = 0; i < sampleData.getSampleMatList().size(); i++) {
+      ResponseNote responseNote = responseData.getNoteTrainingDataList().get(i);
+
+      ResponseMat responseMat = new ResponseMat();
+      // TODO add other note types here
+      if(Objects.equals(responseNote.getType(), "quarter")){
+        responseMat.setResponseNote(responseNote);
+      }
+      responseMat.setName(responseNote.getStep());
+      responseMat.setType(responseNote.getType());
+
+      kNearest.train(sampleData.getSampleMatList().get(i), responseMat);
     }
     return kNearest;
   }

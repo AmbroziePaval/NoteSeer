@@ -10,12 +10,15 @@ import android.widget.EditText;
 import android.widget.ImageView;
 
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.OpencvStavesUtil;
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.knearest.KnearestNote;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.ResponseData;
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.ResponseMat;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.ResponseNote;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.SampleData;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.SampleMat;
 
 import org.opencv.android.Utils;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
 import org.opencv.ml.KNearest;
@@ -26,6 +29,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
   private List<Rect> rectangles;
   private int currentRectangleIndex;
   private SampleData sampleData;
+  private KnearestNote kNearest;
 
   private List<Mat> sample;
   private List<ResponseNote> response;
@@ -46,11 +51,11 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-//    SampleData sampleDataTest = loadRecognitionSampleData();
-    ResponseData responseData = loadRecognitionResponseData();
+    final SampleData sampleDataTest = loadRecognitionSampleData();
+    final ResponseData responseData = loadRecognitionResponseData();
 
-    KNearest kNearest = KNearest.create();
-    kNearest.train(new Mat(), 0, new Mat());
+    kNearest = new KnearestNote();
+    OpencvStavesUtil.trainWithData(kNearest, sampleDataTest, responseData);
 
     sample = new ArrayList<>();
     response = new ArrayList<>();
@@ -90,16 +95,33 @@ public class MainActivity extends AppCompatActivity {
             Mat source = new Mat();
             Utils.bitmapToMat(inputImage, source);
             Mat sampleDataMat = OpencvStavesUtil.getElementSampleDataFromRectangle(source, rectangles.get(currentRectangleIndex));
-            SampleMat sampleMatData = OpencvStavesUtil.matToSampleMat(sampleDataMat);
-            sampleData.getSampleMatList().add(sampleMatData);
-            sample.add(sampleDataMat);
+//            SampleMat sampleMatData = OpencvStavesUtil.matToSampleMat(sampleDataMat);
+//
+//            sampleData = new SampleData();
+//            sampleData.getSampleMatList().add(sampleMatData);
+//            sample.add(sampleDataMat);
+//
+//             get rectangle response
+//            String noteStep = ((EditText) findViewById(R.id.pitchStepText)).getText().toString();
+//            int noteOctave = Integer.parseInt(((EditText) findViewById(R.id.pitchOctaveNumber)).getText().toString());
+//            String noteType = ((EditText) findViewById(R.id.noteTypeText)).getText().toString();
+//            ResponseNote noteData = new ResponseNote(noteStep, noteOctave, noteType);
+//            response.add(noteData);
 
-            // get rectangle response
-            String noteStep = ((EditText) findViewById(R.id.pitchStepText)).getText().toString();
-            int noteOctave = Integer.parseInt(((EditText) findViewById(R.id.pitchOctaveNumber)).getText().toString());
-            String noteType = ((EditText) findViewById(R.id.noteTypeText)).getText().toString();
-            ResponseNote noteData = new ResponseNote(noteStep, noteOctave, noteType);
-            response.add(noteData);
+//            ResponseMat responseMat = new ResponseMat();
+//            Mat sampleMat = OpencvStavesUtil.sampleMatToMat(sampleMatData);
+//            sampleMat.convertTo(sampleMat, CvType.CV_32F);
+//            kNearest.findNearest(sampleMat, 1, responseMat);
+
+
+            ResponseMat responseMat = new ResponseMat();
+            responseMat = kNearest.findNearest(sampleDataMat);
+            ((EditText) findViewById(R.id.pitchStepText)).setText(responseMat.getName());
+            ((EditText) findViewById(R.id.noteTypeText)).setText(responseMat.getType());
+            // TODO add other note types here
+            if (Objects.equals(responseMat.getType(), "quarter")) {
+              ((EditText) findViewById(R.id.pitchOctaveNumber)).setText(responseMat.getResponseNote().getOctave());
+            }
           } catch (Exception e) {
             e.printStackTrace();
           }
@@ -108,7 +130,6 @@ public class MainActivity extends AppCompatActivity {
 //          ResponseData responseData = new ResponseData();
 //          responseData.setNoteTrainingDataList(response);
 //          String testResponseData = getRecognitionResponseData(responseData);
-//          int a =2;
         }
       });
     }
@@ -125,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
         this.stringBuilder.append((char) oneByte);
       }
 
-      public String toString(){
+      public String toString() {
         return this.stringBuilder.toString();
       }
     };
@@ -149,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
         this.stringBuilder.append((char) oneByte);
       }
 
-      public String toString(){
+      public String toString() {
         return this.stringBuilder.toString();
       }
     };

@@ -2,11 +2,6 @@
     <noteTrainingDataList class="java.util.ArrayList">
         <note>
             <octave>4</octave>
-            <step>Gclef</step>
-            <type>clef</type>
-        </note>
-        <note>
-            <octave>4</octave>
             <step>4/4</step>
             <type>measure</type>
         </note>
@@ -56,9 +51,19 @@
             <type>quarter</type>
         </note>
         <note>
-            <octave>5</octave>
+            <octave>4</octave>
             <step>staveEnd</step>
             <type>staveEnd</type>
+        </note>
+        <note>
+            <octave>4</octave>
+            <step>Gclef</step>
+            <type>clef</type>
+        </note>
+        <note>
+            <octave>4</octave>
+            <step>sheetEnd</step>
+            <type>SheetEnd</type>
         </note>
     </noteTrainingDataList>
 </responses>

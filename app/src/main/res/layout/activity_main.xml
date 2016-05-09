@@ -42,7 +42,6 @@
             <EditText
                 android:layout_width="119dp"
                 android:layout_height="wrap_content"
-                android:inputType="number"
                 android:ems="10"
                 android:id="@+id/pitchOctaveNumber"
                 android:layout_gravity="bottom|center_horizontal"
