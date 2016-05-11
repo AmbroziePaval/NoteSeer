@@ -27,6 +27,7 @@ import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.Re
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.SampleData;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.SampleMat;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.notes.NotePlayer;
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.notes.SheetPlayer;
 
 import org.opencv.android.Utils;
 import org.opencv.core.Mat;
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
   private KnearestNote kNearest;
   private RecognitionDataLoader recognitionDataLoader;
   private MediaPlayer mediaPlayer;
+  NotePlayer notePlayer;
 
   private List<Mat> sample;
   private List<ResponseNote> response;
@@ -73,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
     kNearest = new KnearestNote();
     KnearestUtil.trainWithData(kNearest, sampleDataTest, responseData);
+    notePlayer = new NotePlayer(getApplicationContext());
 
     sample = new ArrayList<>();
     response = new ArrayList<>();
@@ -123,10 +126,43 @@ public class MainActivity extends AppCompatActivity {
         }
       });
     }
+
+    final Button playSheetButton = (Button) findViewById(R.id.playSheetButton);
+    if (playSheetButton != null) {
+      playSheetButton.setOnClickListener(new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+          List<Mat> samplesToPlay = new ArrayList<>();
+          int rectIndex = 0;
+          while(rectangles.size() > rectIndex) {
+            inputImage = BitmapFactory.decodeResource(getResources(), inputPictureFile);
+            Mat source = new Mat();
+            Utils.bitmapToMat(inputImage, source);
+            Mat sampleDataMat = OpencvStavesUtil.getElementSampleDataFromRectangle(source, rectangles.get(rectIndex));
+
+            samplesToPlay.add(sampleDataMat);
+            rectIndex++;
+          }
+          playSheet(samplesToPlay);
+        }
+      });
+    }
+  }
+
+  private void playSheet(List<Mat> samplesToPlay) {
+    SheetPlayer sheetPlayer = new SheetPlayer(new NotePlayer(getApplicationContext()));
+
+    int sampleIndex = 0;
+    while(sampleIndex < samplesToPlay.size()) {
+      ResponseMat responseMat = kNearest.findNearest(samplesToPlay.get(sampleIndex));
+      sheetPlayer.addNote(responseMat.getResponseNote());
+      sampleIndex++;
+    }
+
+    sheetPlayer.playSheet();
   }
 
   public void playNote(final ResponseNote responseNote) {
-    NotePlayer notePlayer = new NotePlayer(getApplicationContext());
     notePlayer.setResponseNote(responseNote);
 
     ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -145,7 +181,7 @@ public class MainActivity extends AppCompatActivity {
     ((EditText) findViewById(R.id.pitchStepText)).setText(responseMat.getName());
     ((EditText) findViewById(R.id.noteTypeText)).setText(responseMat.getType());
     // TODO add other note types here. to be changed!
-    if (responseMat.getResponseNote().toBePlayed()) {
+    if (responseMat.toBePlayed()) {
       Integer octave = responseMat.getResponseNote().getOctave();
       ((EditText) findViewById(R.id.pitchOctaveNumber)).setText(octave.toString());
       playNote(responseMat.getResponseNote());

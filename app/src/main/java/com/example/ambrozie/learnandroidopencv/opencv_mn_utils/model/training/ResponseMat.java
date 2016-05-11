@@ -17,6 +17,10 @@ public class ResponseMat {
   public ResponseMat() {
   }
 
+  public boolean toBePlayed() {
+    return responseNote != null && responseNote.toBePlayed();
+  }
+
   public String getName() {
     return name;
   }

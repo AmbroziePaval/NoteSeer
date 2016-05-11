@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">LearnAndroidOpenCV</string>
+    <string name="app_name">Note Seer</string>
     <string name="nextCaptureString">Next capture</string>
     <string name="startString">Start</string>
 </resources>

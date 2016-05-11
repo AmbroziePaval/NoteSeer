@@ -20,17 +20,13 @@ public class NotePlayer implements Callable<Integer> {
     this.context = context;
   }
 
-  public ResponseNote getResponseNote() {
-    return responseNote;
-  }
-
-  public void setResponseNote(ResponseNote responseNote) {
-    this.responseNote = responseNote;
+  public void setResponseNote(ResponseNote rn) {
+    this.responseNote = rn;
   }
 
   @Override
   public Integer call() throws Exception {
-    if (responseNote != null) {
+    if (responseNote != null && responseNote.toBePlayed()) {
       SoundPool soundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 0);
       int soundId = soundPool.load(context, NoteUtil.getNoteMp3Resource(responseNote), 1);
 
@@ -39,8 +35,9 @@ public class NotePlayer implements Callable<Integer> {
         public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
           soundPool.play(sampleId, 1, 1, 0, 0, 1);
           try {
-            // TODO change wo note length
-            Thread.sleep(500);                 //1000 milliseconds is one second.
+            if(responseNote.getType().equals("quarter")){
+              Thread.sleep(500); // considering a quarter note to last half a second
+            }
           } catch(InterruptedException ex) {
             Thread.currentThread().interrupt();
           }
