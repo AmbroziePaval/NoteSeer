@@ -4,17 +4,16 @@ import org.simpleframework.xml.Element;
 import org.simpleframework.xml.Root;
 
 /**
- *
  * Created by Ambrozie on 4/23/2016.
  */
 
-@Root(name="note")
+@Root(name = "note")
 public class ResponseNote {
-  @Element(name="step")
+  @Element(name = "step")
   private String step;
-  @Element(name="octave")
+  @Element(name = "octave")
   private Integer octave;
-  @Element(name="type")
+  @Element(name = "type")
   private String type;
 
   public ResponseNote() {
@@ -24,6 +23,12 @@ public class ResponseNote {
     this.step = step;
     this.octave = octave;
     this.type = type;
+  }
+
+  public boolean toBePlayed() {
+    if(type.equals("quarter"))
+      return true;
+    return false;
   }
 
   public String getStep() {

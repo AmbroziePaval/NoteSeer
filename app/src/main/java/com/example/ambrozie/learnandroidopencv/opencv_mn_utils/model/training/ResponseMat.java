@@ -9,44 +9,12 @@ import org.opencv.core.Size;
 /**
  * Created by Ambrozie on 5/4/2016.
  */
-public class ResponseMat extends Mat{
+public class ResponseMat {
   private String name;
   private String type;
   private ResponseNote responseNote;
 
-  public ResponseMat(long addr) {
-    super(addr);
-  }
-
   public ResponseMat() {
-  }
-
-  public ResponseMat(int rows, int cols, int type) {
-    super(rows, cols, type);
-  }
-
-  public ResponseMat(Size size, int type) {
-    super(size, type);
-  }
-
-  public ResponseMat(int rows, int cols, int type, Scalar s) {
-    super(rows, cols, type, s);
-  }
-
-  public ResponseMat(Size size, int type, Scalar s) {
-    super(size, type, s);
-  }
-
-  public ResponseMat(Mat m, Range rowRange, Range colRange) {
-    super(m, rowRange, colRange);
-  }
-
-  public ResponseMat(Mat m, Range rowRange) {
-    super(m, rowRange);
-  }
-
-  public ResponseMat(Mat m, Rect roi) {
-    super(m, roi);
   }
 
   public String getName() {

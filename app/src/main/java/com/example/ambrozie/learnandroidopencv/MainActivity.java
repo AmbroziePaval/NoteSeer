@@ -1,9 +1,16 @@
 package com.example.ambrozie.learnandroidopencv;
 
+import android.annotation.TargetApi;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.SoundPool;
+import android.nfc.Tag;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,25 +18,32 @@ import android.widget.ImageView;
 
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.OpencvStavesUtil;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.knearest.KnearestNote;
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.knearest.KnearestUtil;
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.recognition.NoteUtil;
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.recognition.RecognitionDataLoader;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.ResponseData;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.ResponseMat;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.ResponseNote;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.SampleData;
 import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.model.training.SampleMat;
+import com.example.ambrozie.learnandroidopencv.opencv_mn_utils.notes.NotePlayer;
 
 import org.opencv.android.Utils;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
-import org.opencv.ml.KNearest;
-import org.simpleframework.xml.Serializer;
-import org.simpleframework.xml.core.Persister;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -44,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
   private int currentRectangleIndex;
   private SampleData sampleData;
   private KnearestNote kNearest;
+  private RecognitionDataLoader recognitionDataLoader;
+  private MediaPlayer mediaPlayer;
 
   private List<Mat> sample;
   private List<ResponseNote> response;
@@ -51,11 +67,12 @@ public class MainActivity extends AppCompatActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    final SampleData sampleDataTest = loadRecognitionSampleData();
-    final ResponseData responseData = loadRecognitionResponseData();
+    recognitionDataLoader = new RecognitionDataLoader(getResources());
+    final SampleData sampleDataTest = recognitionDataLoader.loadRecognitionSampleData();
+    final ResponseData responseData = recognitionDataLoader.loadRecognitionResponseData();
 
     kNearest = new KnearestNote();
-    OpencvStavesUtil.trainWithData(kNearest, sampleDataTest, responseData);
+    KnearestUtil.trainWithData(kNearest, sampleDataTest, responseData);
 
     sample = new ArrayList<>();
     response = new ArrayList<>();
@@ -70,17 +87,19 @@ public class MainActivity extends AppCompatActivity {
     imageView = (ImageView) this.findViewById(R.id.imageView);
 
     rectangles = OpencvStavesUtil.getElementsContourWithTheStave(inputImageCopy1, inputImageCopy2);
-    currentRectangleIndex = 0;
-    inputImage = OpencvStavesUtil.drawRectOnImage(inputImage, rectangles.get(currentRectangleIndex));
+    currentRectangleIndex = -1;
 
     imageView.setImageBitmap(inputImage);
 
     final Button nextButton = (Button) findViewById(R.id.nextRectangleButton);
     if (nextButton != null) {
+      nextButton.setText(R.string.startString);
+    }
+    if (nextButton != null) {
       nextButton.setOnClickListener(new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-//          SampleData sampleDataXml = loadRecognitionSampleData();
+          nextButton.setText(R.string.nextCaptureString);
           currentRectangleIndex++;
           if (rectangles.size() <= currentRectangleIndex) {
             currentRectangleIndex = 0;
@@ -95,115 +114,64 @@ public class MainActivity extends AppCompatActivity {
             Mat source = new Mat();
             Utils.bitmapToMat(inputImage, source);
             Mat sampleDataMat = OpencvStavesUtil.getElementSampleDataFromRectangle(source, rectangles.get(currentRectangleIndex));
-//            SampleMat sampleMatData = OpencvStavesUtil.matToSampleMat(sampleDataMat);
-//
-//            sampleData = new SampleData();
-//            sampleData.getSampleMatList().add(sampleMatData);
-//            sample.add(sampleDataMat);
-//
-//             get rectangle response
-//            String noteStep = ((EditText) findViewById(R.id.pitchStepText)).getText().toString();
-//            int noteOctave = Integer.parseInt(((EditText) findViewById(R.id.pitchOctaveNumber)).getText().toString());
-//            String noteType = ((EditText) findViewById(R.id.noteTypeText)).getText().toString();
-//            ResponseNote noteData = new ResponseNote(noteStep, noteOctave, noteType);
-//            response.add(noteData);
 
-//            ResponseMat responseMat = new ResponseMat();
-//            Mat sampleMat = OpencvStavesUtil.sampleMatToMat(sampleMatData);
-//            sampleMat.convertTo(sampleMat, CvType.CV_32F);
-//            kNearest.findNearest(sampleMat, 1, responseMat);
-
-
-            ResponseMat responseMat = new ResponseMat();
-            responseMat = kNearest.findNearest(sampleDataMat);
-            ((EditText) findViewById(R.id.pitchStepText)).setText(responseMat.getName());
-            ((EditText) findViewById(R.id.noteTypeText)).setText(responseMat.getType());
-            // TODO add other note types here
-            if (Objects.equals(responseMat.getType(), "quarter")) {
-              ((EditText) findViewById(R.id.pitchOctaveNumber)).setText(responseMat.getResponseNote().getOctave());
-            }
+            testWithUserOutput(sampleDataMat);
           } catch (Exception e) {
             e.printStackTrace();
           }
 
-//          String testSampleData = getRecognitionSampleData(sampleData);
-//          ResponseData responseData = new ResponseData();
-//          responseData.setNoteTrainingDataList(response);
-//          String testResponseData = getRecognitionResponseData(responseData);
         }
       });
     }
   }
 
-  private String getRecognitionResponseData(ResponseData responseData) {
-    Serializer serializer = new Persister();
-    String xml;
-    OutputStream outputStream = new OutputStream() {
-      StringBuilder stringBuilder = new StringBuilder();
+  public void playNote(final ResponseNote responseNote) {
+    NotePlayer notePlayer = new NotePlayer(getApplicationContext());
+    notePlayer.setResponseNote(responseNote);
 
-      @Override
-      public void write(int oneByte) throws IOException {
-        this.stringBuilder.append((char) oneByte);
-      }
-
-      public String toString() {
-        return this.stringBuilder.toString();
-      }
-    };
-
+    ExecutorService executorService = Executors.newSingleThreadExecutor();
+    Future<Integer> future = executorService.submit(notePlayer);
     try {
-      serializer.write(responseData, outputStream);
-    } catch (Exception e) {
+      future.get(4, TimeUnit.SECONDS);
+      executorService.shutdownNow();
+    } catch (InterruptedException | ExecutionException | TimeoutException e) {
       e.printStackTrace();
     }
-    return outputStream.toString();
   }
 
-  private String getRecognitionSampleData(SampleData sampleData) {
-    Serializer serializer = new Persister();
-    String xml;
-    OutputStream outputStream = new OutputStream() {
-      StringBuilder stringBuilder = new StringBuilder();
-
-      @Override
-      public void write(int oneByte) throws IOException {
-        this.stringBuilder.append((char) oneByte);
-      }
-
-      public String toString() {
-        return this.stringBuilder.toString();
-      }
-    };
-
-    try {
-      serializer.write(sampleData, outputStream);
-    } catch (Exception e) {
-      e.printStackTrace();
+  public void testWithUserOutput(Mat sampleDataMat) {
+    ResponseMat responseMat;
+    responseMat = kNearest.findNearest(sampleDataMat);
+    ((EditText) findViewById(R.id.pitchStepText)).setText(responseMat.getName());
+    ((EditText) findViewById(R.id.noteTypeText)).setText(responseMat.getType());
+    // TODO add other note types here. to be changed!
+    if (responseMat.getResponseNote().toBePlayed()) {
+      Integer octave = responseMat.getResponseNote().getOctave();
+      ((EditText) findViewById(R.id.pitchOctaveNumber)).setText(octave.toString());
+      playNote(responseMat.getResponseNote());
+    } else {
+      ((EditText) findViewById(R.id.pitchOctaveNumber)).setText("");
     }
-    return outputStream.toString();
   }
 
-  private SampleData loadRecognitionSampleData() {
-    Serializer serializer = new Persister();
+  public void trainWithUserImput(Mat sampleDataMat) {
+    SampleMat sampleMatData = OpencvStavesUtil.matToSampleMat(sampleDataMat);
+    sampleData.getSampleMatList().add(sampleMatData);
+    sample.add(sampleDataMat);
 
-    try {
-//      SampleData sampleData = serializer.read(SampleData.class, source);
-      return serializer.read(SampleData.class, getResources().openRawResource(R.raw.recognition_sample_data));
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return null;
-  }
+    //get rectangle response
+    String noteStep = ((EditText) findViewById(R.id.pitchStepText)).getText().toString();
+    int noteOctave = Integer.parseInt(((EditText) findViewById(R.id.pitchOctaveNumber)).getText().toString());
+    String noteType = ((EditText) findViewById(R.id.noteTypeText)).getText().toString();
+    ResponseNote noteData = new ResponseNote(noteStep, noteOctave, noteType);
+    response.add(noteData);
 
-  private ResponseData loadRecognitionResponseData() {
-    Serializer serializer = new Persister();
-
-    try {
-      return serializer.read(ResponseData.class, getResources().openRawResource(R.raw.recognition_response_data));
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-    return null;
+    // get the samples string xml
+    String testSampleData = recognitionDataLoader.getRecognitionSampleData(sampleData);
+    // get the responses string xml
+    ResponseData responseData = new ResponseData();
+    responseData.setNoteTrainingDataList(response);
+    String testResponseData = recognitionDataLoader.getRecognitionResponseData(responseData);
   }
 
   @Override
